@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- این خط برای اطمینان از اجازهٔ اتصال به Hugging Face (دانلود مدل‌ها) و jsdelivr (کتابخانهٔ transformers.js)
+     است، تا اگر پلتفرم میزبانی خودش هدر CSP سخت‌گیرانه‌ای تحمیل نکرده باشد، صفحه از قبل این دو مبدأ را مجاز کرده باشد. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net blob:; worker-src 'self' blob:; connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net blob: data:; img-src 'self' data: blob:; media-src 'self' blob: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:;">
 <title>پخش‌کننده و هایلایتِ صوت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -362,10 +365,79 @@ button{font-family:inherit;}
 body.layout-reversed .app{flex-direction:row-reverse;}
 body.layout-reversed .sidebar{border-inline-start:none;border-inline-end:1px solid var(--border);}
 
+/* ===================== Launcher & app 2 ===================== */
+body:not([data-mode="1"]) .app{display:none;}
+#launcher,#app2{position:fixed;inset:0;background:var(--bg);color:var(--text);font-family:var(--font-ui);z-index:50;}
+body:not([data-mode="launch"]) #launcher{display:none;}
+body:not([data-mode="2"]) #app2{display:none;}
+#launcher{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:20px;}
+#launcher h1{margin:0;font-size:15px;font-weight:500;color:var(--text-dim);}
+.lc-row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.lc-card{width:280px;padding:34px 26px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-l);color:var(--text);cursor:pointer;font-family:inherit;text-align:center;box-shadow:var(--shadow-panel);transition:transform .15s,border-color .15s;}
+.lc-card:hover{transform:translateY(-3px);border-color:var(--accent);}
+.lc-card svg{width:42px;height:42px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.lc-card b{display:block;font-size:26px;margin:14px 0 6px;}
+.lc-card small{color:var(--text-faint);font-size:12px;line-height:1.8;}
+.lc-model-btn{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-m);padding:9px 18px;font:inherit;font-size:12.5px;cursor:pointer;transition:border-color .15s,color .15s;}
+.lc-model-btn:hover{border-color:var(--accent);color:var(--accent);}
+.lc-model-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ===================== Model manager ===================== */
+.model-modal{width:min(440px,100%);}
+.model-list{display:flex;flex-direction:column;gap:14px;padding:4px 0 8px;}
+.model-card{border:1px solid var(--border);border-radius:var(--radius-m);padding:14px 16px;background:var(--surface);}
+.model-card-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+.model-card-top b{font-size:14px;}
+.model-size{font-size:11px;color:var(--text-faint);font-family:var(--font-mono);white-space:nowrap;}
+.model-card-desc{margin:4px 0 12px;font-size:11.5px;color:var(--text-dim);line-height:1.8;}
+.model-progress{height:5px;border-radius:3px;background:var(--track);overflow:hidden;}
+.model-progress-fill{height:100%;width:0%;background:var(--text-faint);border-radius:3px;transition:width .2s linear,background-color .25s;}
+.model-progress-fill.active{background:var(--accent);}
+.model-progress-fill.done{background:var(--accent);}
+.model-card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;}
+.model-status{font-size:11px;color:var(--text-faint);font-family:var(--font-mono);}
+.model-dl-btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:var(--radius-s);padding:7px 16px;font:inherit;font-size:12.5px;cursor:pointer;min-width:98px;text-align:center;transition:background-color .15s,color .15s,border-color .15s;}
+.model-dl-btn.stopping{background:var(--danger);color:#fff;}
+.model-dl-btn.paused{background:transparent;border:1px solid var(--accent);color:var(--accent);}
+.model-dl-btn.done{background:#6b6f76;color:#fff;cursor:default;border:0;}
+.a2-top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-2);}
+.a2-top .sp{flex:1;}
+.a2-top .fn{color:var(--text-dim);font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.a2-btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:var(--radius-m);padding:7px 14px;font:inherit;font-size:13px;cursor:pointer;}
+.a2-btn.ghost{background:var(--surface-2);color:var(--text);}
+#app2{display:flex;flex-direction:column;}
+.a2-body{flex:1;display:flex;min-height:0;}
+.a2-main{flex:1;display:flex;flex-direction:column;min-width:0;}
+#a2Status{padding:8px 20px;font-size:12px;color:var(--text-dim);min-height:20px;}
+#a2Text{flex:1;overflow:auto;padding:12px 28px 40px;font-size:var(--a2fs,20px);line-height:2.3;}
+.seg{cursor:pointer;border-radius:4px;padding:2px 0;}
+.seg.cur{background:var(--surface-2);box-shadow:0 2px 0 var(--accent);}
+#a2Text mark{background:var(--highlight);border-bottom:2px solid var(--highlight-border);color:inherit;border-radius:3px;}
+.a2-player{padding:10px 16px;border-top:1px solid var(--border);background:var(--bg-2);}
+.a2-player audio{width:100%;}
+.a2-side{width:340px;border-inline-start:1px solid var(--border);background:var(--bg-2);display:flex;flex-direction:column;}
+.a2-side .hd{display:flex;align-items:center;gap:6px;padding:12px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap;}
+.a2-side .hd span{flex:1;}
+#a2List{list-style:none;margin:0;padding:10px;overflow:auto;flex:1;}
+#a2List li{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-m);padding:10px;margin-bottom:10px;font-size:13px;line-height:1.9;}
+#a2List textarea{width:100%;box-sizing:border-box;margin-top:6px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-s);font:inherit;font-size:12px;padding:6px;resize:vertical;min-height:36px;}
+#a2List .row{display:flex;gap:6px;margin-top:6px;}
+.a2-tip{position:fixed;z-index:80;display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-m);padding:4px;box-shadow:var(--shadow-panel);}
+.a2-tip button{background:transparent;color:var(--text);border:0;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;border-radius:var(--radius-s);}
+.a2-tip button:hover{background:var(--surface-hover);}
+@media(max-width:800px){.a2-body{flex-direction:column;}.a2-side{width:auto;max-height:38vh;border-inline-start:0;border-top:1px solid var(--border);}}
 /* ===================== Sidebar ===================== */
+.sb-resizer{position:absolute;top:0;bottom:0;inset-inline-end:-4px;width:9px;cursor:col-resize;z-index:30;touch-action:none;}
+body.layout-reversed .sb-resizer{inset-inline-end:auto;inset-inline-start:-4px;}
+.sb-resizer::after{content:"";position:absolute;top:0;bottom:0;left:4px;width:2px;background:transparent;transition:background .15s;}
+.sb-resizer:hover::after,.sb-resizer.dragging::after{background:var(--accent);}
+body.sb-dragging{cursor:col-resize;user-select:none;}
+body.sb-dragging .sidebar{transition:none;}
+.hl-note-flag.stt{color:var(--text-dim);}
 .sidebar{
-  width:308px;
-  flex:0 0 308px;
+  width:var(--sbw,308px);
+  flex:0 0 var(--sbw,308px);
+  position:relative;
   background:var(--bg-2);
   border-inline-end:1px solid var(--border);
   display:flex;
@@ -373,9 +445,8 @@ body.layout-reversed .sidebar{border-inline-start:none;border-inline-end:1px sol
   min-width:0;
   transition:margin .22s ease, opacity .22s ease;
 }
-.sidebar.collapsed{margin-inline-start:-308px;opacity:0;pointer-events:none;}
-body.layout-compact .sidebar{width:256px;flex-basis:256px;}
-body.layout-compact .sidebar.collapsed{margin-inline-start:-256px;}
+.sidebar.collapsed{margin-inline-start:calc(var(--sbw,308px) * -1);opacity:0;pointer-events:none;}
+body.layout-compact .sidebar{--sbw:256px;}
 
 .sidebar-top{
   display:flex;
@@ -1190,12 +1261,67 @@ select, .step-input{
 }
 </style>
 </head>
-<body>
+<body data-mode="launch">
+
+<div id="launcher">
+  <h1>یکی از دو برنامه را انتخاب کنید</h1>
+  <div class="lc-row">
+    <button class="lc-card" data-go="1">
+      <svg viewBox="0 0 24 24"><path d="M3 12h2m3-5v10m4-13v16m4-12v8m4-4h2"/></svg>
+      <b>مِشکات</b><small>هایلایت زدن صوت به همراه یادداشت‌برداری از آن</small>
+    </button>
+    <button class="lc-card" data-go="2">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <b>تصمیم</b><small>تبدیل صوت به متن به همراه یادداشت‌برداری از متن</small>
+    </button>
+  </div>
+  <button class="lc-model-btn" id="lcModelBtn" title="مدیریت مدل‌های تبدیل صوت به متن">
+    <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+    <span>دانلود مدل تبدیل صوت به متن</span>
+  </button>
+</div>
+
+<div class="overlay hidden" id="modelMgrOverlay">
+  <div class="modal model-modal">
+    <div class="modal-head">
+      <h3>مدل‌های تبدیل صوت به متن</h3>
+      <button class="icon-btn" id="closeModelMgrBtn"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p class="desc">یکی از مدل‌ها را دانلود کنید تا در نرم‌افزار «تصمیم» بدون نیاز به اتصال، تبدیل صوت به متن انجام شود. دانلود روی همین دستگاه ذخیره می‌شود و اگر وسط کار قطع شود، از همان‌جا ادامه پیدا می‌کند.</p>
+      <div class="model-list" id="modelList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="app2">
+  <header class="a2-top">
+    <button class="icon-btn" id="a2Home" title="صفحهٔ اصلی"><svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/></svg></button>
+    <b>تصمیم</b><span class="fn" id="a2Fn"></span><span class="sp"></span>
+    <button class="a2-btn" id="a2Import">انتخاب فایل صوتی</button>
+    <button class="icon-btn" id="a2Gear" title="تنظیمات"><svg viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10l2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
+  </header>
+  <div class="a2-body">
+    <section class="a2-main">
+      <div id="a2Status">یک فایل صوتی انتخاب کنید تا به متن تبدیل شود.</div>
+      <div id="a2Text"></div>
+      <div class="a2-player"><audio id="a2Audio" controls></audio></div>
+    </section>
+    <aside class="a2-side">
+      <div class="hd"><span>هایلایت‌ها <b id="a2Cnt">(۰)</b></span>
+        <button class="a2-btn ghost" id="a2CopyAll">کپی همه</button><button class="a2-btn ghost" id="a2Jpg">JPG</button></div>
+      <ul id="a2List"></ul>
+    </aside>
+  </div>
+  <div class="a2-tip hidden" id="a2Tip"></div>
+  <input type="file" id="a2Input" accept="audio/*,video/*" hidden>
+</div>
 
 <div class="app">
 
   <!-- ===================== SIDEBAR ===================== -->
   <aside class="sidebar" id="sidebar">
+    <div class="sb-resizer" id="sbResizer" title="برای تغییر عرض بکشید"></div>
     <div class="sidebar-top">
       <div class="brand">
         <button class="icon-btn" id="settingsBtn" title="تنظیمات">
@@ -1239,6 +1365,7 @@ select, .step-input{
       <button class="icon-btn expand-sidebar-btn" id="expandSidebarBtn" title="نمایش لیست">
         <svg viewBox="0 0 24 24" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
       </button>
+      <button class="icon-btn" id="a1Home" title="صفحهٔ اصلی"><svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/></svg></button>
       <div id="fileChipWrap"></div>
       <button class="icon-btn" id="importBtnTop" title="وارد کردن فایل صوتی">
         <svg viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7 9m5-5l5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
@@ -1339,6 +1466,14 @@ select, .step-input{
       <button class="icon-btn" id="closeSettingsBtn"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
+      <div class="settings-section">
+        <h4>تبدیل صوت به متن</h4>
+        <p class="desc">تبدیل کاملاً روی دستگاه شما انجام می‌شود (مدل Whisper). دانلود مدل‌ها از صفحهٔ اصلی (انتخاب برنامه) و از بخش «دانلود مدل تبدیل صوت به متن» انجام می‌شود؛ اینجا فقط مدلِ فعال برای استفاده را انتخاب کنید.</p>
+        <div class="settings-row"><label>مدل فعال</label><select id="sttModel"><option value="onnx-community/whisper-large-v3-ONNX">فوق‌دقیق (large-v3)</option><option value="onnx-community/whisper-large-v3-turbo">دقیق (large-v3-turbo)</option></select></div>
+        <div class="settings-row"><label>زبان</label><select id="sttLang"><option value="fa">فارسی</option><option value="ar">عربی</option><option value="mix">ترکیب فارسی و عربی</option></select></div>
+        <div class="settings-row"><label>اندازهٔ متن در «تصمیم»</label><input type="range" id="a2Font" min="14" max="34" step="1"></div>
+        <div class="settings-row"><label>دنبال‌کردن خودکار متن هنگام پخش</label><input type="checkbox" id="a2Auto"></div>
+      </div>
       <div class="settings-section">
         <h4>گام عقب‌گرد و جلوبرد</h4>
         <p class="desc">میزان جابه‌جایی صوت با دکمه‌های عقب/جلو و کلیدهای جهت‌نما.</p>
@@ -2326,6 +2461,9 @@ function renderHighlights(){
           <button class="icon-btn copy-hl" title="کپی این هایلایت">
             <svg viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           </button>
+          <button class="icon-btn stt-hl" title="تبدیل صوت این هایلایت به متن (افزوده به یادداشت)">
+            <svg viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
+          </button>
           <button class="icon-btn note-hl" title="یادداشت">
             <svg viewBox="0 0 24 24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
           </button>
@@ -2352,6 +2490,7 @@ function renderHighlights(){
     nameInput.addEventListener("keydown", (e)=>{ e.stopPropagation(); if(e.key==="Enter") nameInput.blur(); });
     li.querySelector(".play-hl").addEventListener("click", ()=>playHighlight(hl.id));
     li.querySelector(".copy-hl").addEventListener("click", ()=>copySingleHighlight(hl.id));
+    li.querySelector(".stt-hl").addEventListener("click", (e)=>transcribeHighlight(hl.id, e.currentTarget));
     li.querySelector(".del-hl").addEventListener("click", ()=>deleteHighlight(hl.id));
     const noteBtn = li.querySelector(".note-hl");
     noteBtn.classList.toggle("open", isNoteWindowOpen(hl.id));
@@ -2744,10 +2883,11 @@ function exportJpgOffline(base){
 
   const cardData = items.map(function(hl, i){
     const note = (hl.note || "").trim();
-    const noteLines = note ? Math.max(1, Math.ceil(measure.measureText(note).width / (width - padding*2 - cardPadding*2))) : 0;
+    const lines = note ? wrapNote(measure, note, width - padding*2 - cardPadding*2) : [];
     return {
       hl: hl,
-      height: Math.max(cardMinH, 92 + noteLines * 30)
+      lines: lines,
+      height: Math.max(cardMinH, 92 + lines.length * 30)
     };
   });
 
@@ -2811,8 +2951,7 @@ function exportJpgOffline(base){
       ctx.textAlign = "right";
       ctx.fillStyle = "#333";
       ctx.font = "18px Arial, sans-serif";
-      drawRtlLines(ctx, hl.note.trim(), width-padding-cardPadding, y+82,
-                   width-padding*2-cardPadding*2, 29, 4);
+      item.lines.forEach(function(ln, k){ ctx.fillText(ln, width-padding-cardPadding, y+82+k*30); });
     }
 
     y += h + gap;
@@ -2822,6 +2961,25 @@ function exportJpgOffline(base){
   exportStatus.textContent = "دانلود JPG انجام شد (کاملاً آفلاین)";
 }
 
+function wrapNote(ctx, text, maxW){
+  const out = [];
+  String(text).split(/\r?\n/).forEach(function(par){
+    const words = par.split(/\s+/).filter(Boolean);
+    if(!words.length){ out.push(""); return; }
+    let line = "";
+    words.forEach(function(wd){
+      const t = line ? line + " " + wd : wd;
+      if(line && ctx.measureText(t).width > maxW){ out.push(line); line = wd; } else line = t;
+      while(line.length > 1 && ctx.measureText(line).width > maxW){
+        let k = line.length;
+        while(k > 1 && ctx.measureText(line.slice(0,k)).width > maxW) k--;
+        out.push(line.slice(0,k)); line = line.slice(k);
+      }
+    });
+    out.push(line);
+  });
+  return out;
+}
 function roundedRectPath(ctx,x,y,w,h,r){
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -2943,62 +3101,50 @@ function exportPdfOffline(){
   let page = makePage();
   drawHeader(page.ctx);
   page.y = margin + headerH;
+  const bottom = pageH - margin;
+  function newPage(){ pages.push(page.canvas); page = makePage(); drawHeader(page.ctx); page.y = margin + headerH; }
 
   items.forEach(function(hl, i){
-    const h = cardHeight(page.ctx, hl);
+    page.ctx.font = "18px Arial, Tahoma, sans-serif";
+    const lines = (hl.note && hl.note.trim()) ? wrapNote(page.ctx, hl.note.trim(), contentW - cardPad*2) : [];
+    let idx = 0, first = true;
+    do{
+      const textY0 = first ? 82 : 62;
+      if(page.y + (lines.length ? textY0 + lineH + 10 : cardMinH) > bottom) newPage();
+      const avail = Math.floor((bottom - page.y - textY0 - 10) / lineH);
+      const take = Math.min(lines.length - idx, Math.max(1, avail));
+      const h = lines.length ? Math.max(first ? cardMinH : 0, textY0 + take*lineH + 10) : cardMinH;
+      const ctx = page.ctx, x = margin, w = contentW, y = page.y;
 
-    if(page.y + h > pageH - margin){
-      pages.push(page.canvas);
-      page = makePage();
-      drawHeader(page.ctx);
-      page.y = margin + headerH;
-    }
+      ctx.strokeStyle = "#e2e2e2";
+      ctx.lineWidth = 2;
+      roundedRectPath(ctx, x, y, w, h, 14);
+      ctx.stroke();
 
-    const ctx = page.ctx;
-    const x = margin;
-    const w = contentW;
-    const y = page.y;
-
-    ctx.strokeStyle = "#e2e2e2";
-    ctx.lineWidth = 2;
-    roundedRectPath(ctx, x, y, w, h, 14);
-    ctx.stroke();
-
-    ctx.direction = "rtl";
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#222";
-    ctx.font = "700 22px Arial, Tahoma, sans-serif";
-    ctx.fillText(
-      faDigits(i+1) + ". " + (hl.name || "هایلایت"),
-      x+w-cardPad, y+38
-    );
-
-    ctx.direction = "ltr";
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#555";
-    ctx.font = "17px monospace";
-    ctx.fillText(
-      fmtTime(hl.start) + "  —  " + fmtTime(hl.end),
-      x+cardPad, y+38
-    );
-
-    if(hl.note && hl.note.trim()){
       ctx.direction = "rtl";
       ctx.textAlign = "right";
+      if(first){
+        ctx.fillStyle = "#222";
+        ctx.font = "700 22px Arial, Tahoma, sans-serif";
+        ctx.fillText(faDigits(i+1) + ". " + (hl.name || "هایلایت"), x+w-cardPad, y+38);
+        ctx.direction = "ltr";
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#555";
+        ctx.font = "17px monospace";
+        ctx.fillText(fmtTime(hl.start) + "  —  " + fmtTime(hl.end), x+cardPad, y+38);
+        ctx.direction = "rtl";
+        ctx.textAlign = "right";
+      }else{
+        ctx.fillStyle = "#888";
+        ctx.font = "16px Arial, Tahoma, sans-serif";
+        ctx.fillText("ادامهٔ یادداشتِ هایلایت " + faDigits(i+1) + " — " + (hl.name || ""), x+w-cardPad, y+34);
+      }
       ctx.fillStyle = "#333";
       ctx.font = "18px Arial, Tahoma, sans-serif";
-      drawRtlLines(
-        ctx,
-        hl.note.trim(),
-        x+w-cardPad,
-        y+82,
-        w-cardPad*2,
-        lineH,
-        Math.max(1, Math.floor((h-94)/lineH))
-      );
-    }
-
-    page.y += h + cardGap;
+      for(let k=0;k<take;k++) ctx.fillText(lines[idx+k], x+w-cardPad, y+textY0+k*lineH);
+      idx += take; first = false;
+      page.y += h + cardGap;
+    }while(idx < lines.length);
   });
 
   pages.push(page.canvas);
@@ -3162,6 +3308,464 @@ function init(){
   renderHighlights();
 }
 init();
+
+
+/* ===================== Sidebar resize ===================== */
+(function(){
+  const rz = $("sbResizer");
+  try{ const w = +localStorage.getItem("hlx.sbw"); if(w>=200) sidebar.style.setProperty("--sbw", w+"px"); }catch(e){}
+  rz.addEventListener("pointerdown", function(e){
+    e.preventDefault(); rz.setPointerCapture(e.pointerId);
+    rz.classList.add("dragging"); document.body.classList.add("sb-dragging");
+  });
+  rz.addEventListener("pointermove", function(e){
+    if(!rz.classList.contains("dragging")) return;
+    const r = sidebar.getBoundingClientRect();
+    const edgeOnLeft = (r.left + r.right)/2 > innerWidth/2;
+    const w = edgeOnLeft ? r.right - e.clientX : e.clientX - r.left;
+    sidebar.style.setProperty("--sbw", Math.round(Math.max(200, Math.min(w, innerWidth*0.7))) + "px");
+  });
+  function end(){
+    if(!rz.classList.contains("dragging")) return;
+    rz.classList.remove("dragging"); document.body.classList.remove("sb-dragging");
+    try{ localStorage.setItem("hlx.sbw", parseInt(sidebar.style.getPropertyValue("--sbw"))); }catch(e){}
+    drawWaveform();
+  }
+  rz.addEventListener("pointerup", end); rz.addEventListener("pointercancel", end);
+})();
+
+/* ===================== Speech to text (Whisper, local) ===================== */
+const STT = {model:"onnx-community/whisper-large-v3-turbo", lang:"fa", font:20, auto:true};
+try{ Object.assign(STT, JSON.parse(localStorage.getItem("hlx.stt2")||"{}")); }catch(e){}
+function applyCfg(){ document.documentElement.style.setProperty("--a2fs", STT.font+"px"); }
+[["sttModel","model"],["sttLang","lang"],["a2Font","font"],["a2Auto","auto"]].forEach(function(x){
+  const el = $(x[0]), chk = el.type==="checkbox";
+  chk ? el.checked = !!STT[x[1]] : el.value = STT[x[1]];
+  el.addEventListener("change", function(){
+    STT[x[1]] = chk ? el.checked : (el.type==="range" ? +el.value : el.value);
+    try{ localStorage.setItem("hlx.stt2", JSON.stringify(STT)); }catch(e){}
+    applyCfg();
+  });
+});
+applyCfg();
+
+let asrP = null, asrModel = "";
+function stage(name, fn){ return Promise.resolve().then(fn).catch(function(e){ throw new Error(name + " ← " + ((e && e.message) || e)); }); }
+function getASR(onp){
+  if(asrP && asrModel===STT.model) return asrP;
+  asrModel = STT.model;
+  asrP = stage("بارگیری مدل", async function(){
+    const tf = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3");
+    tf.env.useBrowserCache = true;
+    // یک پیکربندی ثابت (wasm/q8) همیشه استفاده می‌شود تا کلید کش عوض نشود و
+    // دانلودِ قبلی (چه از طریق این صفحه چه از طریق «دانلود مدل» در صفحهٔ اصلی) دوباره هدر نرود.
+    try{
+      return await tf.pipeline("automatic-speech-recognition", STT.model, {device:"wasm", dtype:"q8", progress_callback:onp});
+    }catch(e){
+      console.warn("بارگیری q8 ناموفق بود، تلاش با fp32", e);
+      return await tf.pipeline("automatic-speech-recognition", STT.model, {device:"wasm", dtype:"fp32", progress_callback:onp});
+    }
+  });
+  asrP.catch(function(){ asrP = null; });
+  return asrP;
+}
+
+/* ===================== Model manager (download/pause/resume, offline-safe) ===================== */
+const STT_MODELS = [
+  {key:"largev3", id:"onnx-community/whisper-large-v3-ONNX", label:"فوق‌دقیق (large-v3)", desc:"دقیق‌ترین مدل؛ نسخهٔ کامل و بدون هرس‌شدهٔ large-v3 با حجم دانلود و پردازش بیشتر نسبت به «دقیق»."},
+  {key:"large", id:"onnx-community/whisper-large-v3-turbo", label:"دقیق (large-v3-turbo)", desc:"تعادل خوبی میان سرعت و دقت؛ حجم دانلود کمتر از فوق‌دقیق."}
+];
+// درخواست پایدارسازی فضای ذخیره‌سازی مرورگر، تا مدل‌های دانلودشده در شرایط کمبود فضا دیرتر پاک شوند
+// (تضمین صددرصد نیست، ولی احتمال حفظ داده را بالا می‌برد؛ اگر مرورگر پشتیبانی نکند بی‌خطر نادیده گرفته می‌شود).
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persist().catch(function(){});
+}
+const MM_DB = "hlxModelStore", MM_STORE = "files";
+function mmDbOpen(){
+  return new Promise(function(res, rej){
+    const rq = indexedDB.open(MM_DB, 1);
+    rq.onupgradeneeded = function(){ rq.result.createObjectStore(MM_STORE); };
+    rq.onsuccess = function(){ res(rq.result); };
+    rq.onerror = function(){ rej(rq.error); };
+  });
+}
+async function mmDbGet(key){
+  const db = await mmDbOpen();
+  return new Promise(function(res, rej){
+    const tx = db.transaction(MM_STORE, "readonly"), rq = tx.objectStore(MM_STORE).get(key);
+    rq.onsuccess = function(){ res(rq.result || null); }; rq.onerror = function(){ rej(rq.error); };
+  });
+}
+async function mmDbSet(key, val){
+  const db = await mmDbOpen();
+  return new Promise(function(res, rej){
+    const tx = db.transaction(MM_STORE, "readwrite"); tx.objectStore(MM_STORE).put(val, key);
+    tx.oncomplete = function(){ res(); }; tx.onerror = function(){ rej(tx.error); };
+  });
+}
+function mmStKey(k){ return "hlx.mdl." + k; }
+function mmLoadSt(k){ try{ return JSON.parse(localStorage.getItem(mmStKey(k)) || "null"); }catch(e){ return null; } }
+function mmSaveSt(k, st){ try{ localStorage.setItem(mmStKey(k), JSON.stringify(st)); }catch(e){} }
+function mmFmtBytes(n){
+  if(!n && n!==0) return "—";
+  if(n < 1024*1024) return faDigits(Math.round(n/1024)) + " کیلوبایت";
+  return faDigits((n/(1024*1024)).toFixed(1)) + " مگابایت";
+}
+async function mmManifest(modelId){
+  const r = await fetch("https://huggingface.co/api/models/" + modelId);
+  if(!r.ok) throw new Error("فهرست فایل‌های مدل دریافت نشد");
+  const j = await r.json();
+  const names = (j.siblings || []).map(function(s){ return s.rfilename; });
+  const onnx = names.filter(function(n){ return /^onnx\/(encoder_model|decoder_model_merged)(_quantized|_int8|_uint8|_q8)?\.onnx$/i.test(n); });
+  function pick(base){
+    return onnx.find(function(n){ return n === "onnx/" + base + "_quantized.onnx"; })
+      || onnx.find(function(n){ return new RegExp("^onnx/" + base + "(_int8|_uint8|_q8)\\.onnx$").test(n); })
+      || onnx.find(function(n){ return n === "onnx/" + base + ".onnx"; })
+      || null;
+  }
+  const files = [pick("encoder_model"), pick("decoder_model_merged")];
+  ["config.json","generation_config.json","preprocessor_config.json","tokenizer_config.json","tokenizer.json","special_tokens_map.json","vocab.json","merges.txt","normalizer.json"].forEach(function(n){
+    if(names.indexOf(n) !== -1) files.push(n);
+  });
+  return files.filter(Boolean).map(function(f){ return {name:f, url:"https://huggingface.co/" + modelId + "/resolve/main/" + f}; });
+}
+async function mmHeadSize(url){
+  try{ const r = await fetch(url, {method:"HEAD"}); const len = r.headers.get("content-length"); return len ? +len : null; }
+  catch(e){ return null; }
+}
+async function mmDownloadFile(modelId, file, onProgress, ctrl){
+  const dbKey = "model:" + modelId + ":" + file.name;
+  const stored = await mmDbGet(dbKey);
+  let blob = (stored && stored.bytes) ? stored.bytes : new Blob([]);
+  let received = blob.size, total = (stored && stored.total) || file.total;
+  if(total && received >= total){ onProgress(received, total); return blob; }
+  const resp = await fetch(file.url, received ? {headers:{Range:"bytes=" + received + "-"}} : {});
+  if(resp.status !== 200 && resp.status !== 206) throw new Error("خطا در دریافت «" + file.name + "»");
+  if(resp.status === 200 && received){ received = 0; blob = new Blob([]); }
+  if(!total){ const cl = resp.headers.get("content-length"); total = cl ? (received + (+cl)) : null; }
+  const reader = resp.body.getReader();
+  let pending = [], pendingBytes = 0;
+  async function flush(){
+    if(!pending.length) return;
+    blob = new Blob([blob].concat(pending)); pending = []; pendingBytes = 0;
+    await mmDbSet(dbKey, {bytes:blob, total:total});
+  }
+  while(true){
+    if(ctrl.aborted){ await flush(); const e = new Error("paused"); e.paused = true; throw e; }
+    const step = await reader.read();
+    if(step.done) break;
+    pending.push(step.value); pendingBytes += step.value.byteLength; received += step.value.byteLength;
+    onProgress(received, total);
+    if(pendingBytes > 500000) await flush();
+  }
+  await flush();
+  return blob;
+}
+async function mmWarmCache(modelId, files){
+  if(!("caches" in window)) return;
+  try{
+    const cache = await caches.open("transformers-cache");
+    for(const f of files){
+      const stored = await mmDbGet("model:" + modelId + ":" + f.name);
+      if(!stored || !stored.bytes) continue;
+      if(await cache.match(f.url)) continue;
+      await cache.put(f.url, new Response(stored.bytes, {headers:{"Content-Length": String(stored.bytes.size)}}));
+    }
+  }catch(e){ console.warn("پیش‌بارگذاری کش ناموفق بود", e); }
+}
+const MM_RUN = {};
+function mmProgress(st){
+  st.receivedBytes = st.files.reduce(function(a,f){ return a + (f.received || 0); }, 0);
+  st.totalBytes = st.files.reduce(function(a,f){ return a + (f.total || 0); }, 0);
+}
+async function mmStart(m, ui){
+  let st = mmLoadSt(m.key);
+  const ctrl = {aborted:false};
+  MM_RUN[m.key] = ctrl;
+  if(!st || !st.files || !st.files.length){
+    ui.setPhase("در حال دریافت فهرست فایل‌ها…");
+    const list = await mmManifest(m.id);
+    const files = [];
+    for(const f of list){ files.push({name:f.name, url:f.url, total: await mmHeadSize(f.url), received:0, done:false}); }
+    st = {files:files, status:"downloading"};
+  } else { st.status = "downloading"; }
+  mmProgress(st); mmSaveSt(m.key, st);
+  ui.setState("downloading", st);
+  try{
+    for(const f of st.files){
+      if(f.done) continue;
+      const blob = await mmDownloadFile(m.id, f, function(recv, total){
+        f.received = recv; if(total && !f.total) f.total = total;
+        mmProgress(st); mmSaveSt(m.key, st); ui.setProgress(st);
+      }, ctrl);
+      f.done = true; f.received = f.total || blob.size;
+    }
+    mmProgress(st);
+    ui.setPhase("در حال آماده‌سازی…");
+    await mmWarmCache(m.id, st.files);
+    st.status = "done"; mmSaveSt(m.key, st);
+    ui.setState("done", st);
+  }catch(err){
+    st.status = "paused"; mmProgress(st); mmSaveSt(m.key, st);
+    if(err && err.paused) ui.setState("paused", st);
+    else { console.warn("دانلود مدل متوقف شد", err); ui.setState("paused", st, err); }
+  }
+}
+function mmStop(m){ if(MM_RUN[m.key]) MM_RUN[m.key].aborted = true; }
+function mmBuildCard(m){
+  const card = document.createElement("div"); card.className = "model-card"; card.dataset.status = "idle";
+  const top = document.createElement("div"); top.className = "model-card-top";
+  const b = document.createElement("b"); b.textContent = m.label;
+  const size = document.createElement("span"); size.className = "model-size";
+  top.appendChild(b); top.appendChild(size);
+  const desc = document.createElement("p"); desc.className = "model-card-desc"; desc.textContent = m.desc;
+  const prog = document.createElement("div"); prog.className = "model-progress";
+  const fill = document.createElement("div"); fill.className = "model-progress-fill"; prog.appendChild(fill);
+  const bottom = document.createElement("div"); bottom.className = "model-card-bottom";
+  const status = document.createElement("span"); status.className = "model-status";
+  const btn = document.createElement("button"); btn.className = "model-dl-btn"; btn.textContent = "دانلود کردن";
+  bottom.appendChild(status); bottom.appendChild(btn);
+  card.appendChild(top); card.appendChild(desc); card.appendChild(prog); card.appendChild(bottom);
+
+  const ui = {
+    setPhase: function(msg){ status.textContent = msg; },
+    setProgress: function(st){
+      const pct = st.totalBytes ? Math.min(100, Math.round(st.receivedBytes / st.totalBytes * 100)) : 0;
+      fill.style.width = pct + "%";
+      status.textContent = (st.totalBytes ? faDigits(pct) + "٪ — " : "") + mmFmtBytes(st.receivedBytes) + (st.totalBytes ? " از " + mmFmtBytes(st.totalBytes) : "");
+      size.textContent = st.totalBytes ? mmFmtBytes(st.totalBytes) : "";
+    },
+    setState: function(status_, st, err){
+      card.dataset.status = status_;
+      if(status_ === "downloading"){
+        fill.classList.add("active"); fill.classList.remove("done");
+        btn.textContent = "متوقف کردن"; btn.className = "model-dl-btn stopping"; btn.disabled = false;
+        ui.setProgress(st);
+      } else if(status_ === "paused"){
+        fill.classList.remove("active");
+        btn.textContent = "ادامه دادن"; btn.className = "model-dl-btn paused"; btn.disabled = false;
+        ui.setProgress(st);
+        if(err) this.setPhase("دانلود متوقف شد؛ می‌توانید ادامه دهید.");
+      } else if(status_ === "done"){
+        fill.classList.add("done"); fill.classList.remove("active"); fill.style.width = "100%";
+        btn.textContent = "آماده استفاده"; btn.className = "model-dl-btn done"; btn.disabled = true;
+        status.textContent = "دانلود کامل شد — " + mmFmtBytes(st.totalBytes);
+      } else {
+        fill.classList.remove("active","done"); fill.style.width = "0%";
+        btn.textContent = "دانلود کردن"; btn.className = "model-dl-btn"; btn.disabled = false;
+        status.textContent = "";
+      }
+    }
+  };
+  const st0 = mmLoadSt(m.key);
+  if(st0 && st0.files && st0.files.length){
+    mmProgress(st0);
+    ui.setState(st0.status === "done" ? "done" : "paused", st0);
+  }
+  btn.addEventListener("click", function(){
+    const s = card.dataset.status;
+    if(s === "done") return;
+    if(s === "downloading"){ mmStop(m); return; }
+    mmStart(m, ui);
+  });
+  return card;
+}
+function mmInit(){
+  const list = $("modelList"); if(!list || list.dataset.built) return;
+  list.dataset.built = "1";
+  STT_MODELS.forEach(function(m){ list.appendChild(mmBuildCard(m)); });
+}
+$("lcModelBtn").addEventListener("click", function(){ mmInit(); $("modelMgrOverlay").classList.remove("hidden"); });
+$("closeModelMgrBtn").addEventListener("click", function(){ $("modelMgrOverlay").classList.add("hidden"); });
+$("modelMgrOverlay").addEventListener("mousedown", function(e){ if(e.target === $("modelMgrOverlay")) $("modelMgrOverlay").classList.add("hidden"); });
+async function pcm16k(file, start, end){
+  const AC = window.AudioContext || window.webkitAudioContext, dec = new AC();
+  return stage("خواندن فایل صوتی", async function(){
+    const buf = await dec.decodeAudioData(await file.arrayBuffer());
+    dec.close && dec.close();
+    const s = Math.max(0, start), e = Math.min(buf.duration, end), SR = 16000;
+    const off = new OfflineAudioContext(1, Math.max(1, Math.round((e-s)*SR)), SR);
+    const src = off.createBufferSource(); src.buffer = buf; src.connect(off.destination); src.start(0, s, e-s);
+    return {pcm:(await off.startRendering()).getChannelData(0), duration:buf.duration};
+  });
+}
+async function runASR(file, start, end, onStatus){
+  const asr = await getASR(function(p){
+    if(p.status==="progress" && p.progress!=null) onStatus("در حال دانلود مدل… " + faDigits(Math.round(p.progress)) + "٪");
+  });
+  onStatus("در حال تبدیل صوت به متن… (بسته به طول فایل ممکن است طول بکشد)");
+  const a = await pcm16k(file, start, end);
+  // زبان: فارسی/عربی ثابت، یا در حالت «ترکیب» بدون تحمیل زبان تا مدل زبان هر بخش صوت را
+  // به‌صورت خودکار (در هر تکهٔ ۳۰ثانیه‌ای) خودش تشخیص دهد.
+  const lang = STT.lang==="ar" ? "arabic" : STT.lang==="mix" ? null : "persian";
+  const r = await stage("تشخیص گفتار", ()=>asr(a.pcm, {language: lang, task:"transcribe",
+    chunk_length_s:30, stride_length_s:5, return_timestamps:true}));
+  r.duration = a.duration; return r;
+}
+const STT_MARK = "🎙 متن تبدیل‌شده از صوت:";
+async function transcribeHighlight(id, btn){
+  const t = currentTrack(); const hl = t && t.highlights.find(h=>h.id===id);
+  if(!hl) return;
+  btn.disabled = true;
+  try{
+    const r = await runASR(t.file, hl.start, hl.end, showToast);
+    const text = (r.text||"").trim();
+    if(!text) throw new Error("متنی تشخیص داده نشد");
+    pushHistory(t);
+    hl.note = (hl.note && hl.note.trim() ? hl.note.trim() + "\n\n" : "") + STT_MARK + "\n" + text;
+    renderHighlights(); showToast("متن به یادداشت افزوده شد.");
+  }catch(err){ showToast("خطا در تبدیل: " + (err && err.message ? err.message : err)); }
+  finally{ btn.disabled = false; }
+}
+
+/* ===================== Launcher ===================== */
+function setMode(m){ document.body.dataset.mode = m; if(m==="1") setTimeout(drawWaveform, 60); }
+document.querySelectorAll(".lc-card").forEach(b=>b.addEventListener("click", ()=>setMode(b.dataset.go)));
+$("a1Home").addEventListener("click", ()=>setMode("launch"));
+$("a2Home").addEventListener("click", ()=>{ $("a2Audio").pause(); setMode("launch"); });
+document.addEventListener("keydown", e=>{ if(document.body.dataset.mode!=="1") e.stopImmediatePropagation(); }, true);
+
+/* ===================== App 2: تصمیم ===================== */
+const A2 = {segs:[], text:"", hls:[], id:0, cur:-1, sel:null};
+const a2Text = $("a2Text"), a2Tip = $("a2Tip"), a2Audio = $("a2Audio");
+function a2Status(m){ $("a2Status").textContent = m; }
+$("a2Import").addEventListener("click", ()=>$("a2Input").click());
+$("a2Gear").addEventListener("click", ()=>$("settingsOverlay").classList.remove("hidden"));
+
+$("a2Input").addEventListener("change", async function(){
+  const f = this.files[0]; this.value = ""; if(!f) return;
+  if(a2Audio.src) URL.revokeObjectURL(a2Audio.src);
+  a2Audio.src = URL.createObjectURL(f); $("a2Fn").textContent = f.name;
+  A2.segs = []; A2.text = ""; A2.hls = []; a2Text.textContent = ""; a2Render();
+  try{
+    const r = await runASR(f, 0, Infinity, a2Status);
+    let ch = (r.chunks||[]).filter(c=>c.text && c.text.trim());
+    if(!ch.length) ch = [{text:r.text||"", timestamp:[0, r.duration]}];
+    let o = 0;
+    A2.segs = ch.map(function(c){
+      const t = c.text.trim(), sg = {t:t, o:o, s:c.timestamp[0]||0, e:c.timestamp[1]==null ? r.duration : c.timestamp[1]};
+      o += t.length + 1; return sg;
+    });
+    A2.text = A2.segs.map(x=>x.t).join(" ");
+    a2Status("تبدیل انجام شد. متن را انتخاب کنید تا هایلایت یا کپی کنید؛ با کلیک روی هر جمله، صوت از همان‌جا پخش می‌شود.");
+    a2Render();
+  }catch(err){ a2Status("خطا: " + (err && err.message ? err.message : err)); }
+});
+
+function a2Render(){
+  a2Text.textContent = "";
+  A2.segs.forEach(function(sg, i){
+    const sp = document.createElement("span"); sp.className = "seg"; sp.dataset.i = i; sp.dataset.o = sg.o;
+    const a = sg.o, b = sg.o + sg.t.length;
+    const cuts = new Set([a, b]);
+    A2.hls.forEach(h=>{ if(h.s<b && h.e>a){ cuts.add(Math.max(a,h.s)); cuts.add(Math.min(b,h.e)); } });
+    const c = [...cuts].sort((x,y)=>x-y);
+    for(let k=0;k<c.length-1;k++){
+      const txt = A2.text.slice(c[k], c[k+1]), h = A2.hls.find(h=>h.s<=c[k] && h.e>=c[k+1]);
+      if(h){ const m = document.createElement("mark"); m.dataset.h = h.id; m.textContent = txt; sp.appendChild(m); }
+      else sp.appendChild(document.createTextNode(txt));
+    }
+    a2Text.appendChild(sp); a2Text.appendChild(document.createTextNode(" "));
+  });
+  A2.cur = -1; a2List();
+}
+function a2List(){
+  const ul = $("a2List"); ul.textContent = ""; $("a2Cnt").textContent = "(" + faDigits(A2.hls.length) + ")";
+  A2.hls.slice().sort((x,y)=>x.s-y.s).forEach(function(h){
+    const li = document.createElement("li");
+    const q = document.createElement("div"); q.textContent = A2.text.slice(h.s, h.e);
+    const nt = document.createElement("textarea"); nt.placeholder = "یادداشت…"; nt.value = h.note||"";
+    nt.addEventListener("input", ()=>{ h.note = nt.value; });
+    const row = document.createElement("div"); row.className = "row";
+    [["کپی", ()=>a2Copy(A2.text.slice(h.s,h.e))], ["حذف", ()=>{ A2.hls = A2.hls.filter(x=>x!==h); a2Render(); }]].forEach(function(x){
+      const b = document.createElement("button"); b.className = "a2-btn ghost"; b.textContent = x[0]; b.onclick = x[1]; row.appendChild(b);
+    });
+    li.append(q, nt, row); ul.appendChild(li);
+  });
+}
+function a2Copy(t){
+  const ok = ()=>showToast("کپی شد.");
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(ok, ()=>showToast("کپی نشد."));
+  else{ const x = document.createElement("textarea"); x.value = t; document.body.appendChild(x); x.select(); document.execCommand("copy"); x.remove(); ok(); }
+}
+function offOf(node, o){
+  const el = node.nodeType===3 ? node.parentNode : node, seg = el.closest && el.closest(".seg");
+  if(!seg || node.nodeType!==3) return null;
+  let n = 0; const w = document.createTreeWalker(seg, NodeFilter.SHOW_TEXT); let t;
+  while((t = w.nextNode())){ if(t===node) return +seg.dataset.o + n + o; n += t.length; }
+  return null;
+}
+function tip(items, rect){
+  a2Tip.textContent = "";
+  items.forEach(function(x){
+    const b = document.createElement("button"); b.textContent = x[0];
+    b.addEventListener("mousedown", e=>e.preventDefault());
+    b.addEventListener("click", ()=>{ x[1](); a2Tip.classList.add("hidden"); getSelection().removeAllRanges(); });
+    a2Tip.appendChild(b);
+  });
+  a2Tip.classList.remove("hidden");
+  a2Tip.style.top = Math.max(8, rect.top - 46) + "px";
+  a2Tip.style.left = Math.max(8, Math.min(innerWidth - 190, rect.left + rect.width/2 - 80)) + "px";
+}
+a2Text.addEventListener("mouseup", a2Pick); a2Text.addEventListener("touchend", ()=>setTimeout(a2Pick, 60));
+function a2Pick(ev){
+  const sel = getSelection();
+  if(sel.rangeCount && !sel.isCollapsed){
+    const r = sel.getRangeAt(0); let s = offOf(r.startContainer, r.startOffset), e = offOf(r.endContainer, r.endOffset);
+    if(s!==null && e!==null && s!==e){
+      if(s>e) [s,e] = [e,s];
+      tip([["هایلایت", ()=>{
+        const ov = A2.hls.filter(h=>h.s<=e && h.e>=s);
+        const m = {id:++A2.id, s:Math.min(s,...ov.map(h=>h.s)), e:Math.max(e,...ov.map(h=>h.e)), note:(ov[0]&&ov[0].note)||""};
+        A2.hls = A2.hls.filter(h=>!ov.includes(h)); A2.hls.push(m); a2Render();
+      }], ["کپی این بخش", ()=>a2Copy(A2.text.slice(s,e))]], r.getBoundingClientRect());
+      return;
+    }
+  }
+  const mk = ev && ev.target.closest && ev.target.closest("mark");
+  if(mk){
+    const h = A2.hls.find(x=>x.id==mk.dataset.h);
+    tip([["کپی هایلایت", ()=>a2Copy(A2.text.slice(h.s,h.e))], ["حذف", ()=>{ A2.hls = A2.hls.filter(x=>x!==h); a2Render(); }]], mk.getBoundingClientRect());
+  }else a2Tip.classList.add("hidden");
+}
+a2Text.addEventListener("click", function(e){
+  const seg = e.target.closest(".seg");
+  if(seg && getSelection().isCollapsed){ a2Audio.currentTime = A2.segs[+seg.dataset.i].s; a2Audio.play(); }
+});
+a2Audio.addEventListener("timeupdate", function(){
+  const t = a2Audio.currentTime, i = A2.segs.findIndex(x=>t>=x.s && t<x.e);
+  if(i===A2.cur) return; A2.cur = i;
+  a2Text.querySelectorAll(".seg.cur").forEach(x=>x.classList.remove("cur"));
+  const el = a2Text.querySelector('.seg[data-i="' + i + '"]');
+  if(el){ el.classList.add("cur"); if(STT.auto) el.scrollIntoView({block:"center", behavior:"smooth"}); }
+});
+function a2Items(){ return A2.hls.slice().sort((x,y)=>x.s-y.s).map(h=>({t:A2.text.slice(h.s,h.e), n:(h.note||"").trim()})); }
+$("a2CopyAll").addEventListener("click", function(){
+  const it = a2Items(); if(!it.length) return showToast("هنوز هایلایتی ندارید.");
+  a2Copy(it.map(x=>x.t + (x.n ? "\n" + x.n : "")).join("\n\n"));
+});
+$("a2Jpg").addEventListener("click", function(){
+  const it = a2Items(); if(!it.length) return showToast("هنوز هایلایتی ندارید.");
+  const W = 1240, P = 60, LH = 36, m = document.createElement("canvas").getContext("2d");
+  m.font = "24px Arial, Tahoma, sans-serif";
+  const cards = it.map(function(x){ return {tl:wrapNote(m, x.t, W-P*2-40), nl:x.n ? wrapNote(m, x.n, W-P*2-40) : []}; });
+  const H = 130 + cards.reduce((a,c)=>a + (c.tl.length + c.nl.length)*LH + 50 + (c.nl.length?14:0), 0) + P;
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d", {alpha:false}); c.fillStyle = "#fff"; c.fillRect(0,0,W,H);
+  c.direction = "rtl"; c.textAlign = "right"; c.fillStyle = "#222"; c.font = "700 34px Arial, Tahoma, sans-serif";
+  c.fillText("هایلایت‌های متن", W-P, 80);
+  let y = 130;
+  cards.forEach(function(cd){
+    const h = (cd.tl.length + cd.nl.length)*LH + 30 + (cd.nl.length?14:0);
+    c.strokeStyle = "#e2e2e2"; c.lineWidth = 2; roundedRectPath(c, P, y, W-P*2, h, 14); c.stroke();
+    c.font = "24px Arial, Tahoma, sans-serif"; c.fillStyle = "#222";
+    cd.tl.forEach((l,k)=>c.fillText(l, W-P-20, y+38+k*LH));
+    c.fillStyle = "#666"; c.font = "20px Arial, Tahoma, sans-serif";
+    cd.nl.forEach((l,k)=>c.fillText(l, W-P-20, y+52+(cd.tl.length+k)*LH));
+    y += h + 20;
+  });
+  triggerDownload(cv.toDataURL("image/jpeg", 0.94), "tasmim-highlights.jpg");
+});
 
 })();
 </script>
