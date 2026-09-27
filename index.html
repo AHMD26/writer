@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- این خط برای اطمینان از اجازهٔ اتصال به Hugging Face (دانلود مدل‌ها) و jsdelivr (کتابخانهٔ transformers.js)
      است، تا اگر پلتفرم میزبانی خودش هدر CSP سخت‌گیرانه‌ای تحمیل نکرده باشد، صفحه از قبل این دو مبدأ را مجاز کرده باشد. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net blob:; worker-src 'self' blob:; connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net blob: data:; img-src 'self' data: blob:; media-src 'self' blob: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net blob:; worker-src 'self' blob: https://cdn.jsdelivr.net; connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://cdn.jsdelivr.net blob: data:; img-src 'self' data: blob:; media-src 'self' blob: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:;">
 <title>پخش‌کننده و هایلایتِ صوت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -411,6 +411,9 @@ body:not([data-mode="2"]) #app2{display:none;}
 .model-dl-btn.stopping{background:var(--danger);color:#fff;}
 .model-dl-btn.paused{background:transparent;border:1px solid var(--accent);color:var(--accent);}
 .model-dl-btn.done{background:#6b6f76;color:#fff;cursor:default;border:0;}
+.model-card-btns{display:flex;align-items:center;gap:8px;}
+.model-del-btn{background:transparent;border:1px solid var(--danger);color:var(--danger);border-radius:var(--radius-s);padding:7px 14px;font:inherit;font-size:12.5px;cursor:pointer;white-space:nowrap;transition:background-color .15s,color .15s,border-color .15s;}
+.model-del-btn:hover{background:var(--danger);color:#fff;}
 .a2-top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-2);}
 .a2-top .sp{flex:1;}
 .a2-top .fn{color:var(--text-dim);font-size:12px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1629,6 +1632,26 @@ select, .step-input{
       <div class="confirm-actions">
         <button class="btn-secondary" id="cancelDeleteBtn">انصراف</button>
         <button class="btn-danger" id="confirmDeleteBtn">حذف هایلایت</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Model delete confirm modal ===================== -->
+<div class="overlay hidden" id="modelDeleteConfirmOverlay">
+  <div class="modal confirm-modal">
+    <div class="modal-head">
+      <h3>حذف مدل دانلودشده</h3>
+      <button class="icon-btn" id="closeModelDeleteConfirmBtn"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body confirm-body">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      </div>
+      <p class="confirm-text">آیا از حذفِ مدلِ «<span id="modelDeleteConfirmName"></span>» از حافظهٔ این دستگاه مطمئن هستید؟ برای استفادهٔ دوباره باید آن را دوباره دانلود کنید.</p>
+      <div class="confirm-actions">
+        <button class="btn-secondary" id="cancelModelDeleteBtn">انصراف</button>
+        <button class="btn-danger" id="confirmModelDeleteBtn">حذف کردن</button>
       </div>
     </div>
   </div>
@@ -3399,10 +3422,22 @@ function getASR(onp){
     if(typeof navigator!=="undefined" && navigator.gpu) attempts.push({device:"webgpu", dtype:"q8"});
     attempts.push({device:"wasm", dtype:"q8"});
     attempts.push({device:"wasm", dtype:"fp32"});
+    // هر تلاش با یک سقف زمانی محافظت می‌شود: اگر ساخت مدل (مثلاً به‌خاطر مشکل در راه‌اندازی Worker
+    // یا گیرکردن بی‌صدای backend) هرگز resolve/reject نشود، به‌جای معلق ماندن دائمی برنامه، خطا داده
+    // و به تلاش بعدی (یا در نهایت پیام خطا به کاربر) می‌رویم.
+    function withTimeout(p, ms){
+      return new Promise(function(res, rej){
+        const t = setTimeout(function(){ rej(new Error("زمان آماده‌سازی مدل با این تنظیمات تمام شد")); }, ms);
+        p.then(function(v){ clearTimeout(t); res(v); }, function(e){ clearTimeout(t); rej(e); });
+      });
+    }
     let lastErr;
     for(const opt of attempts){
       try{
-        return await tf.pipeline("automatic-speech-recognition", STT.model, Object.assign({progress_callback:onp}, opt));
+        return await withTimeout(
+          tf.pipeline("automatic-speech-recognition", STT.model, Object.assign({progress_callback:onp}, opt)),
+          120000
+        );
       }catch(e){ lastErr = e; console.warn("بارگیری با تنظیمات " + JSON.stringify(opt) + " ناموفق بود", e); }
     }
     throw lastErr;
@@ -3441,6 +3476,13 @@ async function mmDbSet(key, val){
   const db = await mmDbOpen();
   return new Promise(function(res, rej){
     const tx = db.transaction(MM_STORE, "readwrite"); tx.objectStore(MM_STORE).put(val, key);
+    tx.oncomplete = function(){ res(); }; tx.onerror = function(){ rej(tx.error); };
+  });
+}
+async function mmDbDelete(key){
+  const db = await mmDbOpen();
+  return new Promise(function(res, rej){
+    const tx = db.transaction(MM_STORE, "readwrite"); tx.objectStore(MM_STORE).delete(key);
     tx.oncomplete = function(){ res(); }; tx.onerror = function(){ rej(tx.error); };
   });
 }
@@ -3564,6 +3606,19 @@ async function mmStart(m, ui){
   }
 }
 function mmStop(m){ if(MM_RUN[m.key]) MM_RUN[m.key].aborted = true; }
+// حذف کامل فایل‌های دانلودشدهٔ یک مدل (از IndexedDB، کش مرورگر، و وضعیت ذخیره‌شده در localStorage)
+async function mmDeleteFiles(m){
+  const st = mmLoadSt(m.key);
+  if(st && st.files && st.files.length){
+    let cache = null;
+    if("caches" in window){ try{ cache = await caches.open("transformers-cache"); }catch(e){} }
+    for(const f of st.files){
+      try{ await mmDbDelete("model:" + m.id + ":" + f.name); }catch(e){}
+      if(cache){ try{ await cache.delete(f.url); }catch(e){} }
+    }
+  }
+  try{ localStorage.removeItem(mmStKey(m.key)); }catch(e){}
+}
 function mmBuildCard(m){
   const card = document.createElement("div"); card.className = "model-card"; card.dataset.status = "idle";
   const top = document.createElement("div"); top.className = "model-card-top";
@@ -3576,7 +3631,10 @@ function mmBuildCard(m){
   const bottom = document.createElement("div"); bottom.className = "model-card-bottom";
   const status = document.createElement("span"); status.className = "model-status";
   const btn = document.createElement("button"); btn.className = "model-dl-btn"; btn.textContent = "دانلود کردن";
-  bottom.appendChild(status); bottom.appendChild(btn);
+  const delBtn = document.createElement("button"); delBtn.className = "model-del-btn hidden"; delBtn.textContent = "حذف کردن";
+  const btnGroup = document.createElement("div"); btnGroup.className = "model-card-btns";
+  btnGroup.appendChild(btn); btnGroup.appendChild(delBtn);
+  bottom.appendChild(status); bottom.appendChild(btnGroup);
   card.appendChild(top); card.appendChild(desc); card.appendChild(prog); card.appendChild(bottom);
 
   const ui = {
@@ -3592,20 +3650,24 @@ function mmBuildCard(m){
       if(status_ === "downloading"){
         fill.classList.add("active"); fill.classList.remove("done");
         btn.textContent = "متوقف کردن"; btn.className = "model-dl-btn stopping"; btn.disabled = false;
+        delBtn.classList.add("hidden");
         ui.setProgress(st);
       } else if(status_ === "paused"){
         fill.classList.remove("active");
         btn.textContent = "ادامه دادن"; btn.className = "model-dl-btn paused"; btn.disabled = false;
+        delBtn.classList.add("hidden");
         ui.setProgress(st);
         if(err) this.setPhase("دانلود متوقف شد؛ می‌توانید ادامه دهید.");
       } else if(status_ === "done"){
         fill.classList.add("done"); fill.classList.remove("active"); fill.style.width = "100%";
         btn.textContent = "آماده استفاده"; btn.className = "model-dl-btn done"; btn.disabled = true;
         status.textContent = "دانلود کامل شد — " + mmFmtBytes(st.totalBytes);
+        delBtn.classList.remove("hidden");
       } else {
         fill.classList.remove("active","done"); fill.style.width = "0%";
         btn.textContent = "دانلود کردن"; btn.className = "model-dl-btn"; btn.disabled = false;
         status.textContent = "";
+        delBtn.classList.add("hidden");
       }
     }
   };
@@ -3620,8 +3682,41 @@ function mmBuildCard(m){
     if(s === "downloading"){ mmStop(m); return; }
     mmStart(m, ui);
   });
+  delBtn.addEventListener("click", function(){
+    openModelDeleteConfirm(m, ui);
+  });
   return card;
 }
+/* ---- Model delete confirmation modal ---- */
+const modelDeleteConfirmOverlay = $("modelDeleteConfirmOverlay");
+const modelDeleteConfirmName = $("modelDeleteConfirmName");
+let pendingModelDelete = null;
+function openModelDeleteConfirm(m, ui){
+  pendingModelDelete = {m:m, ui:ui};
+  modelDeleteConfirmName.textContent = m.label;
+  modelDeleteConfirmOverlay.classList.remove("hidden");
+}
+function closeModelDeleteConfirm(){
+  modelDeleteConfirmOverlay.classList.add("hidden");
+  pendingModelDelete = null;
+}
+$("confirmModelDeleteBtn").addEventListener("click", async function(){
+  const pending = pendingModelDelete;
+  closeModelDeleteConfirm();
+  if(!pending) return;
+  const btn = this; btn.disabled = true;
+  try{
+    await mmDeleteFiles(pending.m);
+    pending.ui.setState("idle");
+    showToast("مدل «" + pending.m.label + "» از حافظهٔ این دستگاه حذف شد.");
+  }catch(e){
+    showToast("خطا در حذف مدل: " + (e && e.message ? e.message : e));
+  }
+  finally{ btn.disabled = false; }
+});
+$("cancelModelDeleteBtn").addEventListener("click", closeModelDeleteConfirm);
+$("closeModelDeleteConfirmBtn").addEventListener("click", closeModelDeleteConfirm);
+modelDeleteConfirmOverlay.addEventListener("mousedown", function(e){ if(e.target===modelDeleteConfirmOverlay) closeModelDeleteConfirm(); });
 function mmInit(){
   const list = $("modelList"); if(!list || list.dataset.built) return;
   list.dataset.built = "1";
