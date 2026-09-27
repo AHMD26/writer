@@ -381,6 +381,17 @@ body:not([data-mode="2"]) #app2{display:none;}
 .lc-model-btn{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-m);padding:9px 18px;font:inherit;font-size:12.5px;cursor:pointer;transition:border-color .15s,color .15s;}
 .lc-model-btn:hover{border-color:var(--accent);color:var(--accent);}
 .lc-model-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.lc-help-btn{position:absolute;top:22px;left:22px;width:38px;height:38px;border-radius:50%;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow-panel);transition:transform .15s,border-color .15s,color .15s;}
+.lc-help-btn:hover{transform:translateY(-2px);border-color:var(--accent);color:var(--accent);}
+.lc-help-btn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.help-body h4{margin:16px 0 6px;font-size:13.5px;font-weight:600;color:var(--text);}
+.help-body h4:first-child{margin-top:0;}
+.help-body p{margin:0 0 4px;font-size:12.5px;color:var(--text-dim);line-height:1.95;}
+.help-divider{border:none;border-top:1px solid var(--border-soft);margin:16px 0;}
+.help-note-box{margin-top:18px;padding:12px 14px;background:var(--surface-2);border-inline-start:3px solid var(--accent);border-radius:var(--radius-s);display:flex;gap:9px;align-items:flex-start;}
+.help-note-box svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.help-note-box p{margin:0;font-size:11px;color:var(--text-faint);line-height:1.9;}
+.help-note-box b{display:block;font-size:11.5px;color:var(--text-dim);margin-bottom:3px;}
 
 /* ===================== Model manager ===================== */
 .model-modal{width:min(440px,100%);}
@@ -1264,6 +1275,9 @@ select, .step-input{
 <body data-mode="launch">
 
 <div id="launcher">
+  <button class="lc-help-btn" id="lcHelpBtn" title="راهنمای برنامه">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1.1-1.5 2.2"/><path d="M12 17h.01"/></svg>
+  </button>
   <h1>یکی از دو برنامه را انتخاب کنید</h1>
   <div class="lc-row">
     <button class="lc-card" data-go="1">
@@ -1290,6 +1304,26 @@ select, .step-input{
     <div class="modal-body">
       <p class="desc">یکی از مدل‌ها را دانلود کنید تا در نرم‌افزار «تصمیم» بدون نیاز به اتصال، تبدیل صوت به متن انجام شود. دانلود روی همین دستگاه ذخیره می‌شود و اگر وسط کار قطع شود، از همان‌جا ادامه پیدا می‌کند.</p>
       <div class="model-list" id="modelList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="helpOverlay">
+  <div class="modal model-modal">
+    <div class="modal-head">
+      <h3>راهنمای برنامه</h3>
+      <button class="icon-btn" id="closeHelpBtn"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body help-body">
+      <h4>مِشکات</h4>
+      <p>مِشکات برای گوش‌دادن به یک فایل صوتی (مثل سخنرانی، جلسه یا مصاحبه) و علامت‌گذاریِ بخش‌های مهم آن است. فایل را وارد می‌کنید، موج صدا را می‌بینید و پخش، عقب/جلو رفتن و سرعت پخش را در اختیار دارید. هر جا لازم بود، با مارکر یک «هایلایت» (یک بازهٔ زمانی از صوت) می‌سازید و برای آن یادداشت می‌نویسید. اگر بخواهید، می‌توانید فقط همان بخشِ هایلایت‌شده را — بدون نیاز به پیاده‌کردن کل فایل — به‌طور خودکار به متن تبدیل کنید تا داخل یادداشتش اضافه شود. در پایان هم می‌توانید هایلایت‌ها و یادداشت‌هایشان را کپی یا خروجی بگیرید.</p>
+      <hr class="help-divider">
+      <h4>تصمیم</h4>
+      <p>تصمیم برای زمانی است که می‌خواهید کل یک فایل صوتی به متنِ قابل‌خواندن تبدیل شود. فایل را وارد می‌کنید و خودش به‌طور کامل و جمله‌به‌جمله پیاده می‌شود. با کلیک روی هر جمله از متن، پخش صدا از همان لحظه شروع می‌شود تا بتوانید متن را با شنیدن مقایسه کنید. هر بخشی از متن را که بخواهید می‌توانید انتخاب و هایلایت کنید و بعد کپی یا حذفش کنید. در پایان می‌توانید کل متن را کپی کنید یا از آن یک تصویر (JPG) بسازید.</p>
+      <div class="help-note-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
+        <p><b>نکتهٔ مشترک برای هر دو نرم‌افزار</b>هر دو نرم‌افزار برای تبدیل صوت به متن از یک مدل هوش مصنوعی استفاده می‌کنند که کاملاً داخل همین مرورگر اجرا می‌شود؛ پیش از اولین استفاده، لازم است یک‌بار از دکمهٔ «دانلود مدل تبدیل صوت به متن» در همین صفحه، مدل موردنظر را دانلود کنید.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -3357,14 +3391,21 @@ function getASR(onp){
   asrP = stage("بارگیری مدل", async function(){
     const tf = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3");
     tf.env.useBrowserCache = true;
-    // یک پیکربندی ثابت (wasm/q8) همیشه استفاده می‌شود تا کلید کش عوض نشود و
-    // دانلودِ قبلی (چه از طریق این صفحه چه از طریق «دانلود مدل» در صفحهٔ اصلی) دوباره هدر نرود.
-    try{
-      return await tf.pipeline("automatic-speech-recognition", STT.model, {device:"wasm", dtype:"q8", progress_callback:onp});
-    }catch(e){
-      console.warn("بارگیری q8 ناموفق بود، تلاش با fp32", e);
-      return await tf.pipeline("automatic-speech-recognition", STT.model, {device:"wasm", dtype:"fp32", progress_callback:onp});
+    // ترتیب تلاش‌ها: اگر مرورگر از WebGPU پشتیبانی کند، ابتدا با آن (سریع‌تر روی کارت گرافیک) تلاش می‌شود؛
+    // در غیر این صورت یا در صورت شکست، به wasm (پردازنده) بازمی‌گردد. dtype همیشه q8 نگه داشته می‌شود
+    // (چه روی webgpu چه روی wasm) تا کلید فایل دانلودی عوض نشود و با دانلودِ قبلی (از طریق «دانلود مدل»
+    // در صفحهٔ اصلی) هم‌خوان بماند؛ تنها اگر q8 هم شکست خورد، fp32 روی wasm امتحان می‌شود.
+    const attempts = [];
+    if(typeof navigator!=="undefined" && navigator.gpu) attempts.push({device:"webgpu", dtype:"q8"});
+    attempts.push({device:"wasm", dtype:"q8"});
+    attempts.push({device:"wasm", dtype:"fp32"});
+    let lastErr;
+    for(const opt of attempts){
+      try{
+        return await tf.pipeline("automatic-speech-recognition", STT.model, Object.assign({progress_callback:onp}, opt));
+      }catch(e){ lastErr = e; console.warn("بارگیری با تنظیمات " + JSON.stringify(opt) + " ناموفق بود", e); }
     }
+    throw lastErr;
   });
   asrP.catch(function(){ asrP = null; });
   return asrP;
@@ -3406,6 +3447,17 @@ async function mmDbSet(key, val){
 function mmStKey(k){ return "hlx.mdl." + k; }
 function mmLoadSt(k){ try{ return JSON.parse(localStorage.getItem(mmStKey(k)) || "null"); }catch(e){ return null; } }
 function mmSaveSt(k, st){ try{ localStorage.setItem(mmStKey(k), JSON.stringify(st)); }catch(e){} }
+// آیا مدلِ انتخاب‌شده از طریق «مدیریت مدل‌ها» به‌طور کامل دانلود شده است؟
+function mmIsReady(modelId){
+  const m = STT_MODELS.find(function(x){ return x.id === modelId; });
+  if(!m) return true; // مدلی خارج از فهرست شناخته‌شده؛ این محدودیت رویش اعمال نمی‌شود
+  const st = mmLoadSt(m.key);
+  return !!(st && st.status === "done");
+}
+function mmModelLabel(modelId){
+  const m = STT_MODELS.find(function(x){ return x.id === modelId; });
+  return m ? m.label : modelId;
+}
 function mmFmtBytes(n){
   if(!n && n!==0) return "—";
   if(n < 1024*1024) return faDigits(Math.round(n/1024)) + " کیلوبایت";
@@ -3578,6 +3630,9 @@ function mmInit(){
 $("lcModelBtn").addEventListener("click", function(){ mmInit(); $("modelMgrOverlay").classList.remove("hidden"); });
 $("closeModelMgrBtn").addEventListener("click", function(){ $("modelMgrOverlay").classList.add("hidden"); });
 $("modelMgrOverlay").addEventListener("mousedown", function(e){ if(e.target === $("modelMgrOverlay")) $("modelMgrOverlay").classList.add("hidden"); });
+$("lcHelpBtn").addEventListener("click", function(){ $("helpOverlay").classList.remove("hidden"); });
+$("closeHelpBtn").addEventListener("click", function(){ $("helpOverlay").classList.add("hidden"); });
+$("helpOverlay").addEventListener("mousedown", function(e){ if(e.target === $("helpOverlay")) $("helpOverlay").classList.add("hidden"); });
 async function pcm16k(file, start, end){
   const AC = window.AudioContext || window.webkitAudioContext, dec = new AC();
   return stage("خواندن فایل صوتی", async function(){
@@ -3590,8 +3645,13 @@ async function pcm16k(file, start, end){
   });
 }
 async function runASR(file, start, end, onStatus){
+  if(!mmIsReady(STT.model)){
+    const e = new Error("مدل «" + mmModelLabel(STT.model) + "» روی این دستگاه دانلود نشده است. لطفاً پیش از تبدیل صوت به متن، از دکمهٔ «مدیریت مدل‌های تبدیل صوت به متن» در صفحهٔ اصلی، این مدل را دانلود کنید.");
+    e.notDownloaded = true;
+    throw e;
+  }
   const asr = await getASR(function(p){
-    if(p.status==="progress" && p.progress!=null) onStatus("در حال دانلود مدل… " + faDigits(Math.round(p.progress)) + "٪");
+    if(p.status==="progress" && p.progress!=null) onStatus("در حال آماده‌سازی مدل… " + faDigits(Math.round(p.progress)) + "٪");
   });
   onStatus("در حال تبدیل صوت به متن… (بسته به طول فایل ممکن است طول بکشد)");
   const a = await pcm16k(file, start, end);
@@ -3614,7 +3674,10 @@ async function transcribeHighlight(id, btn){
     pushHistory(t);
     hl.note = (hl.note && hl.note.trim() ? hl.note.trim() + "\n\n" : "") + STT_MARK + "\n" + text;
     renderHighlights(); showToast("متن به یادداشت افزوده شد.");
-  }catch(err){ showToast("خطا در تبدیل: " + (err && err.message ? err.message : err)); }
+  }catch(err){
+    if(err && err.notDownloaded) showToast(err.message);
+    else showToast("خطا در تبدیل: " + (err && err.message ? err.message : err));
+  }
   finally{ btn.disabled = false; }
 }
 
@@ -3649,7 +3712,10 @@ $("a2Input").addEventListener("change", async function(){
     A2.text = A2.segs.map(x=>x.t).join(" ");
     a2Status("تبدیل انجام شد. متن را انتخاب کنید تا هایلایت یا کپی کنید؛ با کلیک روی هر جمله، صوت از همان‌جا پخش می‌شود.");
     a2Render();
-  }catch(err){ a2Status("خطا: " + (err && err.message ? err.message : err)); }
+  }catch(err){
+    if(err && err.notDownloaded) a2Status(err.message);
+    else a2Status("خطا: " + (err && err.message ? err.message : err));
+  }
 });
 
 function a2Render(){
